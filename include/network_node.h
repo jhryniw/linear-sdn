@@ -38,20 +38,23 @@ public:
 
     virtual void loop();
     virtual void list() = 0;
-    virtual void exit() = 0;
+    virtual void exit();
+    virtual bool ok();
+
     virtual void processPacket(const Packet& packet) = 0;
 
     int getId();
 
 protected:
+    bool node_ok;
 
     void setPort(int port, int dst);
-    Fifo getPort(int port);
+    std::shared_ptr<Fifo> getPort(int port) const;
 
 private:
     int id_;
     std::vector<pollfd> port_fds_;
-    std::vector<std::unique_ptr<Fifo>> ports_;
+    std::vector<std::shared_ptr<Fifo>> ports_;
     pollfd stdin_fd_;
 };
 

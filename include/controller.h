@@ -20,7 +20,6 @@ public:
     Controller(int nSwitch);
 
     virtual void list();
-    virtual void exit();
     virtual void processPacket(const Packet& packet);
 
 };

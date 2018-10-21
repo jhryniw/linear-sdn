@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
         host = unique_ptr<Switch>(new Switch(input.swi, input.swj, input.swk, input.trafficFile, input.ipLow, input.ipHigh));
     }
 
-    while (true) {
+    while (host->ok()) {
         host->loop();
     }
 }

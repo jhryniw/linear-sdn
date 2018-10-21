@@ -2,62 +2,79 @@
 
 using namespace std;
 
-Fifo::Fifo() :
-        rfd(-1),
-        wfd(-1)
+Fifo::Fifo()
 {
 
 }
 
 Fifo::Fifo(int src, int dst)
 {
-    rfd = createFifo(src, dst, 'r');
-    wfd = createFifo(src, dst, 'w');
+    r_fifo_ = createFifo(src, dst, 'r');
+    w_fifo_ = createFifo(src, dst, 'w');
 }
 
 Fifo::~Fifo() {
-//    close(rfd);
-//    close(wfd);
+    cout << "Closing FIFO" << endl;
+    close(r_fifo_.fd);
+    close(w_fifo_.fd);
+}
+
+int Fifo::rfd() const {
+    return r_fifo_.fd;
+}
+
+int Fifo::wfd() const {
+    return w_fifo_.fd;
 }
 
 Packet Fifo::readPacket() {
     char msg_buf[128];
-    read(rfd, msg_buf, 128);
+    read(rfd(), msg_buf, 128);
     return Packet::decode(msg_buf);
 }
 
 void Fifo::writePacket(const Packet& packet) {
-    string str_packet = packet.encode();
-    write(wfd, str_packet.c_str(), str_packet.size());
+    // Try opening write connection if it isn't open yet
+    if (wfd() == -1) {
+        w_fifo_ = createFifo(w_fifo_.src, w_fifo_.dst, 'w');
+    }
+
+    if (wfd() != -1) {
+        string str_packet = packet.encode();
+        write(wfd(), str_packet.c_str(), str_packet.size());
+    }
 }
 
-int Fifo::createFifo(int src, int dst, char rw) {
-    int ffd;
+Fifo::fifo_t Fifo::createFifo(int src, int dst, char rw) {
+    fifo_t fifo;
     char fifo_name[20];
+
+    fifo.src = src;
+    fifo.dst = dst;
 
     if (rw == 'r') {
         sprintf(fifo_name, "fifo-%d-%d", dst, src);
 
-        if ((ffd = open(fifo_name, O_RDONLY | O_NONBLOCK)) == -1) {
+        if ((fifo.fd = open(fifo_name, O_RDONLY | O_NONBLOCK)) == -1) {
             mkfifo(fifo_name, S_IRUSR | S_IWUSR);
-            ffd = open(fifo_name, O_RDONLY | O_NONBLOCK);
+            fifo.fd = open(fifo_name, O_RDONLY | O_NONBLOCK);
         }
 
-        cout << "Read: " << fifo_name << " " << ffd << endl;
+        cout << "Read: " << fifo_name << " " << fifo.fd << endl;
     } else if (rw == 'w') {
-        //O_WRONLY
         sprintf(fifo_name, "fifo-%d-%d", src, dst);
 
-        if ((ffd = open(fifo_name, O_WRONLY | O_NONBLOCK)) == -1) {
+        if ((fifo.fd = open(fifo_name, O_WRONLY | O_NONBLOCK)) == -1) {
             mkfifo(fifo_name, S_IRUSR | S_IWUSR);
-            ffd = open(fifo_name, O_WRONLY | O_NONBLOCK);
+            fifo.fd = open(fifo_name, O_WRONLY | O_NONBLOCK);
         }
 
-        cout << "Write: " << fifo_name << " " << ffd << endl;
+        cout << "Write: " << fifo_name << " " << fifo.fd << endl;
     } else {
         // Error
-        return -1;
+        printf("Cannot create fifo with rw flag \'%c\'", rw);
+        return fifo;
     }
 
-    return ffd;
+    return fifo;
 }
