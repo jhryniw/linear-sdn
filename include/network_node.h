@@ -41,7 +41,7 @@ public:
     virtual void exit();
     virtual bool ok();
 
-    virtual void processPacket(const Packet& packet) = 0;
+    virtual void processPacket(int port, const Packet& packet) = 0;
 
     int getId();
 

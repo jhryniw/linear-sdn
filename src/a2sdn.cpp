@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
 
     while (host->ok()) {
         host->loop();
+        sleep(0.1);
     }
 }
 
@@ -126,7 +127,9 @@ input_t ParseInput(const vector<string>& all_args) {
                 exit(1);
             }
 
-            if (!file_exists(all_args.at(2))) {
+            if (file_exists(all_args.at(2))) {
+                trafficFile = all_args.at(2);
+            } else {
                 cout << SWI_USAGE << "\n" << all_args.at(2) << " is not a valid filename" << endl;
                 exit(1);
             }

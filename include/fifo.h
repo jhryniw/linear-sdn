@@ -27,6 +27,7 @@ public:
 
     int rfd() const;
     int wfd() const;
+    int dst() const;
 
     Packet readPacket();
     void writePacket(const Packet& packet);

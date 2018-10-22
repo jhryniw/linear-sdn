@@ -12,7 +12,7 @@ controller.o: network_node.o include/controller.h src/controller.cpp
 network_node.o: packet.o fifo.o include/network_node.h src/network_node.cpp
 	g++ $(CXX_FLAGS) -c src/network_node.cpp -Iinclude -o bin/network_node.o
 
-fifo.o: include/fifo.h src/fifo.cpp
+fifo.o: packet.o include/fifo.h src/fifo.cpp
 	g++ $(CXX_FLAGS) -c src/fifo.cpp -Iinclude -o bin/fifo.o
 
 packet.o: include/packet.h src/packet.cpp

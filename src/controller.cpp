@@ -15,6 +15,20 @@ void Controller::list() {
     cout << "Controller information" << endl;
 }
 
-void Controller::processPacket(const Packet& packet) {
-    cout << "Received packet src= " << packet.srcIP << " dst= " << packet.dstIP << endl;
+void Controller::processPacket(int port, const Packet& packet) {
+    Packet resp;
+
+    switch (packet.type) {
+        case OPEN:
+            resp = Packet(PacketType::ACK, -1, -1);
+            getPort(port)->writePacket(resp);
+            break;
+        case ACK:
+            break;
+        case QUERY:
+        case ADD:
+        case RELAY:
+        case UNKNOWN:
+            break;
+    }
 }

@@ -37,7 +37,9 @@ void NetworkNode::loop() {
         for (size_t i = 0; i < port_fds_.size(); i++) {
             if (port_fds_[i].revents & POLLIN) {
                 // We are reading a packet from a switch
-                processPacket(getPort(i)->readPacket());
+                Packet packet = getPort(i)->readPacket();
+                printf("Received packet type= %s srcIP= %d dstIP= %d\n", ToString(packet.type), packet.srcIP, packet.dstIP);
+                processPacket(i, packet);
             }
         }
     }

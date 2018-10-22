@@ -15,8 +15,8 @@ Fifo::Fifo(int src, int dst)
 
 Fifo::~Fifo() {
     cout << "Closing FIFO" << endl;
-    close(r_fifo_.fd);
-    close(w_fifo_.fd);
+    close(rfd());
+    close(wfd());
 }
 
 int Fifo::rfd() const {
@@ -25,6 +25,10 @@ int Fifo::rfd() const {
 
 int Fifo::wfd() const {
     return w_fifo_.fd;
+}
+
+int Fifo::dst() const {
+    return r_fifo_.dst;
 }
 
 Packet Fifo::readPacket() {
@@ -42,6 +46,7 @@ void Fifo::writePacket(const Packet& packet) {
     if (wfd() != -1) {
         string str_packet = packet.encode();
         write(wfd(), str_packet.c_str(), str_packet.size());
+        printf("Sending packet type= %s srcIP= %d dstIP= %d\n", ToString(packet.type), packet.srcIP, packet.dstIP);
     }
 }
 
@@ -51,6 +56,10 @@ Fifo::fifo_t Fifo::createFifo(int src, int dst, char rw) {
 
     fifo.src = src;
     fifo.dst = dst;
+
+    if (src == -1 || dst == -1) {
+        return fifo;
+    }
 
     if (rw == 'r') {
         sprintf(fifo_name, "fifo-%d-%d", dst, src);
