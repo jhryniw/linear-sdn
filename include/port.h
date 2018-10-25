@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -12,24 +13,25 @@
 #include <packet.h>
 
 // Holds a bidirectional FIFO
-class Fifo {
+class Port {
 public:
 
-    Fifo();
+    Port();
 
     /**
      * Creates bidirectional communication between two nodes
      * @param src The node id creating the fifo
      * @param dst The node id to connect to
      */
-    Fifo(int src, int dst);
-    ~Fifo();
+    Port(int src, int dst);
+    ~Port();
 
     int rfd() const;
     int wfd() const;
+    int src() const;
     int dst() const;
 
-    Packet readPacket();
+    std::unique_ptr<Packet> readPacket();
     void writePacket(const Packet& packet);
 
 private:

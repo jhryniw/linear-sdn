@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 enum PacketType { UNKNOWN, OPEN, ACK, QUERY, ADD, RELAY };
 
@@ -18,19 +19,19 @@ struct Packet {
     virtual ~Packet();
 
     std::string encode() const;
-    static Packet decode(char* msg);
+    static std::unique_ptr<Packet> decode(char* msg);
 
 protected:
     virtual void encodePayload(std::ostream& os) const;
 };
 
 struct OpenPacket : public Packet {
-    int sw, ipLow, ipHigh;
+    int sw, left, right, ipLow, ipHigh;
     explicit OpenPacket(std::istream& is);
-    OpenPacket(int sw, int ipLow, int ipHigh);
+    OpenPacket(int sw, int left, int right, int ipLow, int ipHigh);
 
 protected:
-    virtual void encodePayload(std::ostream& os) const;
+    void encodePayload(std::ostream& os) const override;
 };
 
 std::ostream& operator<<(std::ostream& os, const PacketType& type);

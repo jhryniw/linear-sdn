@@ -37,9 +37,9 @@ void NetworkNode::loop() {
         for (size_t i = 0; i < port_fds_.size(); i++) {
             if (port_fds_[i].revents & POLLIN) {
                 // We are reading a packet from a switch
-                Packet packet = getPort(i)->readPacket();
-                printf("Received packet type= %s srcIP= %d dstIP= %d\n", ToString(packet.type), packet.srcIP, packet.dstIP);
-                processPacket(i, packet);
+                unique_ptr<Packet> packet = getPort((int) i)->readPacket();
+                printf("Received packet type= %s srcIP= %d dstIP= %d\n", ToString(packet->type), packet->srcIP, packet->dstIP);
+                processPacket((int) i, packet);
             }
         }
     }
@@ -59,10 +59,10 @@ int NetworkNode::getId() {
 }
 
 void NetworkNode::setPort(int port, int dst) {
-    ports_.at(port) = shared_ptr<Fifo>(new Fifo(id_, dst));
-    port_fds_.at(port) = pollfd { ports_.at(port)->rfd(), POLLIN, 0 };
+    ports_.at((size_t) port) = shared_ptr<Port>(new Port(id_, dst));
+    port_fds_.at((size_t) port) = pollfd { ports_.at((size_t) port)->rfd(), POLLIN, 0 };
 }
 
-shared_ptr<Fifo> NetworkNode::getPort(int port) const {
-    return ports_.at(port);
+shared_ptr<Port> NetworkNode::getPort(int port) const {
+    return ports_.at((size_t) port);
 }

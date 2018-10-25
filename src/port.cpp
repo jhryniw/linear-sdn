@@ -1,43 +1,47 @@
-#include <fifo.h>
+#include <port.h>
 
 using namespace std;
 
-Fifo::Fifo()
+Port::Port()
 {
 
 }
 
-Fifo::Fifo(int src, int dst)
+Port::Port(int src, int dst)
 {
     r_fifo_ = createFifo(src, dst, 'r');
     w_fifo_ = createFifo(src, dst, 'w');
 }
 
-Fifo::~Fifo() {
+Port::~Port() {
     cout << "Closing FIFO" << endl;
     close(rfd());
     close(wfd());
 }
 
-int Fifo::rfd() const {
+int Port::rfd() const {
     return r_fifo_.fd;
 }
 
-int Fifo::wfd() const {
+int Port::wfd() const {
     return w_fifo_.fd;
 }
 
-int Fifo::dst() const {
+int Port::dst() const {
     return r_fifo_.dst;
 }
 
-Packet Fifo::readPacket() {
+int Port::src() const {
+    return r_fifo_.src;
+}
+
+unique_ptr<Packet> Port::readPacket() {
     char msg_buf[128];
     read(rfd(), msg_buf, 128);
     return Packet::decode(msg_buf);
 }
 
-void Fifo::writePacket(const Packet& packet) {
+void Port::writePacket(const Packet& packet) {
     // Try opening write connection if it isn't open yet
     if (wfd() == -1) {
         w_fifo_ = createFifo(w_fifo_.src, w_fifo_.dst, 'w');
@@ -50,7 +54,7 @@ void Fifo::writePacket(const Packet& packet) {
     }
 }
 
-Fifo::fifo_t Fifo::createFifo(int src, int dst, char rw) {
+Port::fifo_t Port::createFifo(int src, int dst, char rw) {
     fifo_t fifo;
     char fifo_name[20];
 

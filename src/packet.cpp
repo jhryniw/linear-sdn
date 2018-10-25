@@ -39,8 +39,8 @@ string Packet::encode() const {
     return oss.str();
 }
 
-Packet Packet::decode(char* msg) {
-    Packet* p;
+unique_ptr<Packet> Packet::decode(char* msg) {
+    unique_ptr<Packet> p;
     PacketType type;
     istringstream iss(msg);
 
@@ -48,22 +48,19 @@ Packet Packet::decode(char* msg) {
 
     switch (type) {
         case OPEN:
-            p = new OpenPacket(iss);
+            p = unique_ptr<Packet>(new OpenPacket(iss));
             break;
         case ACK:
         case QUERY:
         case ADD:
         case RELAY:
         case UNKNOWN:
-            p = new Packet(iss);
+            p = unique_ptr<Packet>(new Packet(iss));
             p->type = type;
             break;
     }
 
-    Packet packet = *p;
-    delete p;
-
-    return packet;
+    return p;
 }
 
 void Packet::encodePayload(std::ostream& os) const {}
@@ -72,12 +69,14 @@ OpenPacket::OpenPacket(istream& is) :
     Packet(is)
 {
     type = PacketType::OPEN;
-    is >> sw >> ipLow >> ipHigh;
+    is >> sw >> left >> right >> ipLow >> ipHigh;
 }
 
-OpenPacket::OpenPacket(int sw, int ipLow, int ipHigh) :
+OpenPacket::OpenPacket(int sw, int left, int right, int ipLow, int ipHigh) :
     Packet(PacketType::OPEN, -1, -1),
     sw(sw),
+    left(left),
+    right(right),
     ipLow(ipLow),
     ipHigh(ipHigh)
 {
@@ -86,7 +85,8 @@ OpenPacket::OpenPacket(int sw, int ipLow, int ipHigh) :
 
 void OpenPacket::encodePayload(std::ostream& os) const
 {
-    os << DATA_SEP << sw << DATA_SEP << ipLow << DATA_SEP << ipHigh;
+    os << DATA_SEP << sw << DATA_SEP << left << DATA_SEP << right
+       << DATA_SEP << ipLow << DATA_SEP << ipHigh;
 }
 
 ostream& operator<<(ostream& os, const PacketType& type)

@@ -15,21 +15,11 @@
 #include <poll.h>
 
 #include <packet.h>
-#include <fifo.h>
+#include <port.h>
 
 #define MAX_BUF 128
 
-struct FlowRule {
-    static constexpr int MIN_PRI = 4;
-
-    enum Action { FORWARD, DROP };
-
-    int srcIP_lo, srcIP_hi, dstIP_lo, dstIP_hi;
-    Action actionType;
-    int actionVal;
-    int pri = MIN_PRI;
-    int pktCount = 0;
-};
+static constexpr int MAX_IP = 1000;
 
 class NetworkNode {
 public:
@@ -41,7 +31,7 @@ public:
     virtual void exit();
     virtual bool ok();
 
-    virtual void processPacket(int port, const Packet& packet) = 0;
+    virtual void processPacket(int port, const std::unique_ptr<Packet>& packet) = 0;
 
     int getId();
 
@@ -49,12 +39,12 @@ protected:
     bool node_ok;
 
     void setPort(int port, int dst);
-    std::shared_ptr<Fifo> getPort(int port) const;
+    std::shared_ptr<Port> getPort(int port) const;
 
 private:
     int id_;
     std::vector<pollfd> port_fds_;
-    std::vector<std::shared_ptr<Fifo>> ports_;
+    std::vector<std::shared_ptr<Port>> ports_;
     pollfd stdin_fd_;
 };
 
