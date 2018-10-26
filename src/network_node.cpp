@@ -2,18 +2,30 @@
 
 using namespace std;
 
+const char* TAB = "   ";
+const char* YELLOW = "\033[1;33m";
+const char* DEFAULT = "\033[0m";
+
 const pollfd NULL_POLL_FD = { -1, 0, 0 };
 
 NetworkNode::NetworkNode(int id, int max_ports) :
     node_ok(true),
     id_(id),
-    port_fds_(max_ports, NULL_POLL_FD),
-    ports_(max_ports)
+    port_fds_((size_t) max_ports, NULL_POLL_FD),
+    ports_((size_t) max_ports),
+    prompt_displayed_(false)
 {
     stdin_fd_ = pollfd { STDIN_FILENO, POLLIN, 0 };
 }
 
 void NetworkNode::loop() {
+    // Setup cmd prompt
+    if (!prompt_displayed_) {
+        cout << YELLOW << "cmd[" << DEFAULT << getType() << YELLOW << "]: " << DEFAULT;
+        cout.flush();
+        prompt_displayed_ = true;
+    }
+
     // Poll stdin
     if (poll(&stdin_fd_, 1, 0)) {
         if (stdin_fd_.revents & POLLIN) {
@@ -28,7 +40,11 @@ void NetworkNode::loop() {
                 list();
             } else if (incoming == "exit") {
                 exit();
+            } else if (!incoming.empty()) {
+                cout << "valid commands: list, exit" << endl;
             }
+
+            prompt_displayed_ = false;
         }
     }
 
@@ -54,7 +70,7 @@ bool NetworkNode::ok() {
     return node_ok;
 }
 
-int NetworkNode::getId() {
+int NetworkNode::getId() const {
     return id_;
 }
 

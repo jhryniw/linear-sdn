@@ -61,6 +61,13 @@ void Switch::loop()
     NetworkNode::loop();
 }
 
+std::string Switch::getType() const
+{
+    stringstream ss;
+    ss << "sw" << getId();
+    return ss.str();
+}
+
 void Switch::processPacket(int port, const std::unique_ptr<Packet>& packet)
 {
     switch (packet->type) {

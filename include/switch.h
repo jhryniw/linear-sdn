@@ -27,6 +27,7 @@ public:
     void list() override;
     void loop() override;
     void processPacket(int port, const std::unique_ptr<Packet>& packet) override;
+    std::string getType() const override;
 
 private:
     std::list<FlowRule> flow_table_;

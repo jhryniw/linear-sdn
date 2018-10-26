@@ -45,6 +45,11 @@ void Controller::list() {
     cout << endl;
 }
 
+string Controller::getType() const
+{
+    return "controller";
+}
+
 void Controller::processPacket(int port, const unique_ptr<Packet>& packet) {
     switch (packet->type) {
         case OPEN:

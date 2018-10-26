@@ -32,8 +32,9 @@ public:
     virtual bool ok();
 
     virtual void processPacket(int port, const std::unique_ptr<Packet>& packet) = 0;
+    virtual std::string getType() const = 0;
 
-    int getId();
+    int getId() const;
 
 protected:
     bool node_ok;
@@ -46,6 +47,7 @@ private:
     std::vector<pollfd> port_fds_;
     std::vector<std::shared_ptr<Port>> ports_;
     pollfd stdin_fd_;
+    bool prompt_displayed_;
 };
 
 #endif //NETWORK_NODE_H

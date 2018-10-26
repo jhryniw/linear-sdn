@@ -34,6 +34,7 @@ public:
     explicit Controller(int nSwitch);
 
     void list() override;
+    std::string getType() const override;
     void processPacket(int port, const std::unique_ptr<Packet>& packet) override;
 
 private:
