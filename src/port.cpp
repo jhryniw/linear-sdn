@@ -2,11 +2,6 @@
 
 using namespace std;
 
-Port::Port()
-{
-
-}
-
 Port::Port(int src, int dst)
 {
     r_fifo_ = createFifo(src, dst, 'r');

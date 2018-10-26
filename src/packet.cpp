@@ -50,10 +50,13 @@ unique_ptr<Packet> Packet::decode(char* msg) {
         case OPEN:
             p = unique_ptr<Packet>(new OpenPacket(iss));
             break;
+        case ADD:
+            p = unique_ptr<Packet>(new AddPacket(iss));
+            break;
         case ACK:
         case QUERY:
-        case ADD:
         case RELAY:
+        case ADMIT:
         case UNKNOWN:
             p = unique_ptr<Packet>(new Packet(iss));
             p->type = type;
@@ -73,7 +76,7 @@ OpenPacket::OpenPacket(istream& is) :
 }
 
 OpenPacket::OpenPacket(int sw, int left, int right, int ipLow, int ipHigh) :
-    Packet(PacketType::OPEN, -1, -1),
+    Packet(PacketType::OPEN, sw, 0),
     sw(sw),
     left(left),
     right(right),
@@ -87,6 +90,25 @@ void OpenPacket::encodePayload(std::ostream& os) const
 {
     os << DATA_SEP << sw << DATA_SEP << left << DATA_SEP << right
        << DATA_SEP << ipLow << DATA_SEP << ipHigh;
+}
+
+AddPacket::AddPacket(std::istream &is) :
+    Packet(is)
+{
+    type = PacketType::ADD;
+    is >> flowRule;
+}
+
+AddPacket::AddPacket(int sw, FlowRule flow_rule) :
+    Packet(PacketType::ADD, 0, sw),
+    flowRule(flow_rule)
+{
+
+}
+
+void AddPacket::encodePayload(std::ostream& os) const
+{
+    os << DATA_SEP << flowRule;
 }
 
 ostream& operator<<(ostream& os, const PacketType& type)

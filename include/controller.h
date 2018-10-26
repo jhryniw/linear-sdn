@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <utils.h>
+#include <switch.h>
 #include <network_node.h>
 
 struct SwitchInfo {
@@ -35,9 +37,11 @@ public:
     void processPacket(int port, const std::unique_ptr<Packet>& packet) override;
 
 private:
-    int open_count_ = 0, ack_count_ = 0, query_count_ = 0, add_count_ = 0;
     std::vector<SwitchInfo> switches_;
+    int open_count_ = 0, ack_count_ = 0, query_count_ = 0, add_count_ = 0;
 
+    void handleOpenPacket(int port, const OpenPacket* op);
+    void handleQueryPacket(int port, const Packet* qp);
 };
 
 #endif //CONTROLLER_H

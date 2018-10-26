@@ -12,17 +12,15 @@
 
 #include <packet.h>
 
-// Holds a bidirectional FIFO
+/**
+ * Creates bidirectional communication between two nodes
+ * src: The node id creating the fifo
+ * dst: The node id to connect to
+ */
 class Port {
 public:
 
-    Port();
-
-    /**
-     * Creates bidirectional communication between two nodes
-     * @param src The node id creating the fifo
-     * @param dst The node id to connect to
-     */
+    Port() = default;
     Port(int src, int dst);
     ~Port();
 

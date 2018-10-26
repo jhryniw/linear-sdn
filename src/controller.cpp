@@ -46,31 +46,49 @@ void Controller::list() {
 }
 
 void Controller::processPacket(int port, const unique_ptr<Packet>& packet) {
-    Packet resp;
-    const OpenPacket* op;
-
     switch (packet->type) {
         case OPEN:
-            open_count_++;
-
             // Register switch
-            op = dynamic_cast<const OpenPacket*>(packet.get());
-            switches_.at((size_t) port) = SwitchInfo(op->sw, op->left, op->right, op->ipLow, op->ipHigh);
-            resp = Packet(PacketType::ACK, -1, -1);
-            getPort(port)->writePacket(resp);
-
-            ack_count_++;
-            break;
-        case ACK:
+            handleOpenPacket(port, dynamic_cast<const OpenPacket*>(packet.get()));
             break;
         case QUERY:
+            handleQueryPacket(port, packet.get());
             query_count_++;
+            add_count_++;
             break;
-        case ADD:
-            break;
+        // The controller shouldn't receive these packet types, ignore them
         case RELAY:
-            break;
+        case ADD:
+        case ACK:
+        case ADMIT:
         case UNKNOWN:
             break;
     }
+}
+
+void Controller::handleOpenPacket(int port, const OpenPacket* op)
+{
+    Packet resp(PacketType::ACK, getId(), port + 1);
+    open_count_++;
+    switches_.at((size_t) port) = SwitchInfo(op->sw, op->left, op->right, op->ipLow, op->ipHigh);
+    getPort(port)->writePacket(resp);
+    ack_count_++;
+}
+
+void Controller::handleQueryPacket(int port, const Packet* qp)
+{
+    for(const auto& sw : switches_) {
+        if (between(qp->dstIP, sw.lowIP, sw.highIP)) {
+            int dst_port = sw.id > getPort(port)->dst() ? Switch::LEFT_PORT : Switch::RIGHT_PORT;
+            FlowRule rule(0, MAX_IP, sw.lowIP, sw.highIP, Action::FORWARD, dst_port);
+            AddPacket ap = AddPacket(getPort(port)->dst(), rule);
+            getPort(port)->writePacket(ap);
+            return;
+        }
+    }
+
+    // No switch matches the IP
+    FlowRule rule(0, MAX_IP, qp->dstIP, qp->dstIP, Action::DROP, 0);
+    AddPacket ap = AddPacket(getPort(port)->dst(), rule);
+    getPort(port)->writePacket(ap);
 }

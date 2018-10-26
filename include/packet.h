@@ -5,7 +5,9 @@
 #include <sstream>
 #include <memory>
 
-enum PacketType { UNKNOWN, OPEN, ACK, QUERY, ADD, RELAY };
+#include <flow_rule.h>
+
+enum PacketType { UNKNOWN, ADMIT, OPEN, ACK, QUERY, ADD, RELAY };
 
 struct Packet {
     PacketType type;
@@ -29,6 +31,15 @@ struct OpenPacket : public Packet {
     int sw, left, right, ipLow, ipHigh;
     explicit OpenPacket(std::istream& is);
     OpenPacket(int sw, int left, int right, int ipLow, int ipHigh);
+
+protected:
+    void encodePayload(std::ostream& os) const override;
+};
+
+struct AddPacket : public Packet {
+    FlowRule flowRule;
+    explicit AddPacket(std::istream& is);
+    AddPacket(int sw, FlowRule flow_rule);
 
 protected:
     void encodePayload(std::ostream& os) const override;
