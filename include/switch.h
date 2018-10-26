@@ -2,6 +2,8 @@
 #define SWITCH_H
 
 #include <list>
+#include <deque>
+#include <unordered_set>
 #include <fstream>
 #include <iostream>
 #include <cstring>
@@ -31,6 +33,8 @@ public:
 
 private:
     std::list<FlowRule> flow_table_;
+    std::deque<Packet> packet_queue_;
+    std::unordered_set<std::string> query_set_;
     std::ifstream traffic_file_;
     int ip_low_, ip_high_;
     int admit_count_ = 0, ack_count_ = 0, add_rule_count_ = 0, relay_in_count_ = 0;

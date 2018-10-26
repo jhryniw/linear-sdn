@@ -2,7 +2,6 @@
 
 using namespace std;
 
-const char* TAB = "   ";
 const char* YELLOW = "\033[1;33m";
 const char* DEFAULT = "\033[0m";
 
@@ -29,9 +28,9 @@ void NetworkNode::loop() {
     // Poll stdin
     if (poll(&stdin_fd_, 1, 0)) {
         if (stdin_fd_.revents & POLLIN) {
-            char buf[MAX_BUF];
-            read(stdin_fd_.fd, buf, MAX_BUF);
-            string incoming(buf);
+            memset(buf_, 0, MAX_BUF);
+            read(stdin_fd_.fd, buf_, MAX_BUF);
+            string incoming(buf_);
 
             // Trim trailing characters
             incoming.erase(incoming.find_last_not_of("\t\f\v\n\r\x7F") + 1);
@@ -54,7 +53,7 @@ void NetworkNode::loop() {
             if (port_fds_[i].revents & POLLIN) {
                 // We are reading a packet from a switch
                 unique_ptr<Packet> packet = getPort((int) i)->readPacket();
-                printf("Received packet type= %s srcIP= %d dstIP= %d\n", ToString(packet->type), packet->srcIP, packet->dstIP);
+//                printf("Received packet type= %s srcIP= %d dstIP= %d\n", ToString(packet->type), packet->srcIP, packet->dstIP);
                 processPacket((int) i, packet);
             }
         }

@@ -28,7 +28,6 @@ Controller::Controller(int nSwitch) :
 {
     for (int port = 0; port < nSwitch; port++) {
         setPort(port, port+1);
-        cout << "New port " << port << ": read= " << getPort(port)->rfd() << " write= " << getPort(port)->wfd() << endl;
     }
 }
 
@@ -36,6 +35,7 @@ void Controller::list() {
     cout << "\nSwitch information:\n";
 
     for(const auto& sw : switches_) {
+        if(sw.id == -1) continue;
         printf("[sw%d] port1= %d, port2= %d, port3= %d-%d\n", sw.id, sw.left, sw.right, sw.lowIP, sw.highIP);
     }
 
@@ -84,7 +84,7 @@ void Controller::handleQueryPacket(int port, const Packet* qp)
 {
     for(const auto& sw : switches_) {
         if (between(qp->dstIP, sw.lowIP, sw.highIP)) {
-            int dst_port = sw.id > getPort(port)->dst() ? Switch::LEFT_PORT : Switch::RIGHT_PORT;
+            int dst_port = sw.id > getPort(port)->dst() ? Switch::RIGHT_PORT : Switch::LEFT_PORT;
             FlowRule rule(0, MAX_IP, sw.lowIP, sw.highIP, Action::FORWARD, dst_port);
             AddPacket ap = AddPacket(getPort(port)->dst(), rule);
             getPort(port)->writePacket(ap);

@@ -9,7 +9,6 @@ Port::Port(int src, int dst)
 }
 
 Port::~Port() {
-    cout << "Closing FIFO" << endl;
     close(rfd());
     close(wfd());
 }
@@ -45,7 +44,6 @@ void Port::writePacket(const Packet& packet) {
     if (wfd() != -1) {
         string str_packet = packet.encode();
         write(wfd(), str_packet.c_str(), str_packet.size());
-        printf("Sending packet type= %s srcIP= %d dstIP= %d\n", ToString(packet.type), packet.srcIP, packet.dstIP);
     }
 }
 
@@ -67,8 +65,6 @@ Port::fifo_t Port::createFifo(int src, int dst, char rw) {
             mkfifo(fifo_name, S_IRUSR | S_IWUSR);
             fifo.fd = open(fifo_name, O_RDONLY | O_NONBLOCK);
         }
-
-        cout << "Read: " << fifo_name << " " << fifo.fd << endl;
     } else if (rw == 'w') {
         sprintf(fifo_name, "fifo-%d-%d", src, dst);
 
@@ -76,8 +72,6 @@ Port::fifo_t Port::createFifo(int src, int dst, char rw) {
             mkfifo(fifo_name, S_IRUSR | S_IWUSR);
             fifo.fd = open(fifo_name, O_WRONLY | O_NONBLOCK);
         }
-
-        cout << "Write: " << fifo_name << " " << fifo.fd << endl;
     } else {
         // Error
         printf("Cannot create fifo with rw flag \'%c\'", rw);

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <memory>
 
@@ -48,6 +49,7 @@ private:
     std::vector<std::shared_ptr<Port>> ports_;
     pollfd stdin_fd_;
     bool prompt_displayed_;
+    char buf_[MAX_BUF];
 };
 
 #endif //NETWORK_NODE_H

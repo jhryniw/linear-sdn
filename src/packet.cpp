@@ -25,8 +25,6 @@ Packet::Packet(PacketType type, int src, int dst) :
 
 }
 
-Packet::~Packet() {}
-
 string Packet::encode() const {
     ostringstream oss;
 

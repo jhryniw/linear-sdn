@@ -49,6 +49,9 @@ void Switch::loop()
 {
     if (!ack_received_) {
         // Pass
+    } else if (!packet_queue_.empty()) {
+        processPacket(3, unique_ptr<Packet>(new Packet(packet_queue_.front())));
+        packet_queue_.pop_front();
     } else if (!traffic_file_.eof()) {
         Packet traffic(PacketType::ADMIT, getId(), CONT_PORT);
 
@@ -97,30 +100,31 @@ void Switch::handleNormalPacket(Packet* p)
     rule = matchRule(*p);
 
     if (rule) {
-        if (rule->actionType == Action::DELIVER) {
-            // Deliver the packet
-            rule->pktCount++;
-            return;
-        }
-
         if (rule->actionType == Action::FORWARD) {
             // Forward the packet
             Packet relay(*p);
             relay.type = PacketType::RELAY;
             getPort(rule->actionVal)->writePacket(relay);
             relay_out_count_++;
-            return;
         }
 
-        // We drop the packet
+        // We deliver or drop the packet
         rule->pktCount++;
         return;
     }
 
     // No rule matched, query the controller for a rule
     Packet qp(PacketType::QUERY, p->srcIP, p->dstIP);
-    getPort(CONT_PORT)->writePacket(qp);
-    query_count_++;
+
+    // Do not re-query
+    if (query_set_.find(qp.encode()) == query_set_.end()) {
+        getPort(CONT_PORT)->writePacket(qp);
+        query_set_.emplace(qp.encode());
+        query_count_++;
+    }
+
+    // Put the packet back into the queue
+    packet_queue_.push_back(*p);
 }
 
 void Switch::handleAddPacket(AddPacket* ap)
@@ -133,7 +137,7 @@ void Switch::addRule(FlowRule flow_rule)
 {
     // Orders the flow table by priority
     auto it = flow_table_.begin();
-    while(it->pri < flow_rule.pri && it != flow_table_.end()) { it++; }
+    while(it->pri <= flow_rule.pri && it != flow_table_.end()) { it++; }
     flow_table_.insert(it, flow_rule);
 }
 

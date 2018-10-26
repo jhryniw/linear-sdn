@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <thread>
+#include <chrono>
 
 #include <stdlib.h>
 
@@ -47,18 +49,14 @@ int main(int argc, char** argv) {
     }
 
     if (input.isCont) {
-        printf("Controller -- nSwitch: %d\n", input.nSwitch);
         host = unique_ptr<Controller>(new Controller(input.nSwitch));
     } else {
-        printf("Switch %d -- Left: sw%d Right: sw%d tf: %s IPRange: %d-%d\n",
-                input.swi, input.swj, input.swk, input.trafficFile.c_str(), input.ipLow, input.ipHigh);
-
         host = unique_ptr<Switch>(new Switch(input.swi, input.swj, input.swk, input.trafficFile, input.ipLow, input.ipHigh));
     }
 
     while (host->ok()) {
         host->loop();
-        sleep(0.1);
+        this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
 

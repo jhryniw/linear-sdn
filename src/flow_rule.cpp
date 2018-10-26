@@ -4,6 +4,19 @@ using namespace std;
 
 const char DATA_SEP = ' ';
 
+FlowRule::FlowRule() :
+    srcIP_lo(0),
+    srcIP_hi(1000),
+    dstIP_lo(1001),
+    dstIP_hi(1001),
+    actionType(DROP),
+    actionVal(3),
+    pri(MIN_PRI),
+    pktCount(0)
+{
+
+}
+
 FlowRule::FlowRule(int src_lo, int src_hi, int dst_lo, int dst_hi,
                    Action action, int actionVal, int priority, int pktCount) :
    srcIP_lo(src_lo),

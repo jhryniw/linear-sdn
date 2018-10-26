@@ -18,7 +18,7 @@ struct Packet {
     explicit Packet(std::istream& is);
     Packet(PacketType type, int src, int dst);
 
-    virtual ~Packet();
+    virtual ~Packet() = default;
 
     std::string encode() const;
     static std::unique_ptr<Packet> decode(char* msg);
