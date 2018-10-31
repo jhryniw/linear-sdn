@@ -23,3 +23,8 @@ flow_rule.o: include/flow_rule.h src/flow_rule.cpp
 
 clean:
 	rm -f bin/*.o fifo-* a2sdn
+
+tar:
+	find . -maxdepth 2 -type f \( -name '*.cpp' -o -name '*.h' -o -name '.placeholder' \) | sed -e 's/\.\///g' | \
+        tar -cf submit.tar --files-from - Makefile
+ 
