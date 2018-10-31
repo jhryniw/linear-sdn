@@ -8,6 +8,7 @@
 #include <chrono>
 
 #include <stdlib.h>
+#include <signal.h>
 
 #include <network_node.h>
 #include <switch.h>
@@ -17,6 +18,8 @@
 #define MAXIP 1000
 
 using namespace std;
+
+unique_ptr<NetworkNode> host;
 
 static const char* CONT_USAGE = "usage: a2sdn cont nSwitch";
 static const char* SWI_USAGE = "usage: a2sdn swi trafficFile [null|swj] [null|swk] IPlow-IPhigh";
@@ -33,10 +36,10 @@ struct input_t {
 };
 
 // Prototypes
+void ControllerList(int signo);
 input_t ParseInput(const vector<string>& all_args);
 
 int main(int argc, char** argv) {
-    unique_ptr<NetworkNode> host;
     vector<string> all_args;
     input_t input;
 
@@ -50,14 +53,20 @@ int main(int argc, char** argv) {
 
     if (input.isCont) {
         host = unique_ptr<Controller>(new Controller(input.nSwitch));
+        signal(SIGUSR1, ControllerList); // We only setup this signal for the controller
     } else {
         host = unique_ptr<Switch>(new Switch(input.swi, input.swj, input.swk, input.trafficFile, input.ipLow, input.ipHigh));
     }
 
+    // This loop is run at 100 hz
     while (host->ok()) {
         host->loop();
         this_thread::sleep_for(chrono::milliseconds(10));
     }
+}
+
+void ControllerList(int signo) {
+    host->list();
 }
 
 // Source: https://stackoverflow.com/questions/12774207/
@@ -91,11 +100,11 @@ void validate_ip_range(int ipl, int iph) {
 }
 
 input_t ParseInput(const vector<string>& all_args) {
-    bool isCont;
-    int nSwitch;
-    int swi, swj, swk;
+    bool isCont = false;
+    int nSwitch = 0;
+    int swi = -1, swj = -1, swk = -1;
     string trafficFile;
-    int ipLow, ipHigh;
+    int ipLow = -1, ipHigh = -1;
 
     try {
 
