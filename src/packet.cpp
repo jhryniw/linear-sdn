@@ -4,11 +4,24 @@ using namespace std;
 
 const char* DATA_SEP = " ";
 
+inline string NodeString(int node_id) {
+    if (node_id == -1) {
+        return "null";
+    }
+
+    if (node_id == 0) {
+        return "cont";
+    }
+
+    return "sw" + to_string(node_id);
+}
+
 Packet::Packet() :
         type(PacketType::UNKNOWN),
         srcIP(-1),
         dstIP(-1)
 {
+
 }
 
 Packet::Packet(istream& is) :
@@ -33,6 +46,18 @@ string Packet::encode() const {
 
     // Encode message payload
     encodePayload(oss);
+
+    return oss.str();
+}
+
+string Packet::toString(int src_id, int dst_id) const {
+    ostringstream oss;
+    oss << "(src= " << NodeString(src_id) << ", dest= " << NodeString(dst_id)
+        << ") [" << ToString(type) << "]";
+
+    if (type == QUERY || type == RELAY) {
+        oss << " header= (srcIP= " << srcIP << ", destIP= " << dstIP << ")";
+    }
 
     return oss.str();
 }
@@ -84,6 +109,14 @@ OpenPacket::OpenPacket(int sw, int left, int right, int ipLow, int ipHigh) :
 
 }
 
+string OpenPacket::toString(int src_id, int dst_id) const {
+    char s[256];
+    sprintf(s, "%s\n\t(port0= %s, port1= %s, port2= %s, port3= %d-%d)", Packet::toString(src_id, dst_id).c_str(),
+            NodeString(0).c_str(), NodeString(left).c_str(), NodeString(right).c_str(), ipLow, ipHigh);
+
+    return string(s);
+}
+
 void OpenPacket::encodePayload(std::ostream& os) const
 {
     os << DATA_SEP << sw << DATA_SEP << left << DATA_SEP << right
@@ -102,6 +135,16 @@ AddPacket::AddPacket(int sw, FlowRule flow_rule) :
     flowRule(flow_rule)
 {
 
+}
+
+string AddPacket::toString(int src_id, int dst_id) const {
+    char s[256];
+    sprintf(s, "%s\n\t(srcIP= %d-%d, destIP= %d-%d, action= %s:%d, pri= %d, pktCount= %d)",
+            Packet::toString(src_id, dst_id).c_str(), flowRule.srcIP_lo, flowRule.srcIP_hi,
+            flowRule.dstIP_lo, flowRule.dstIP_hi, ToString(flowRule.actionType), flowRule.actionVal,
+            flowRule.pri, flowRule.pktCount);
+
+    return string(s);
 }
 
 void AddPacket::encodePayload(std::ostream& os) const

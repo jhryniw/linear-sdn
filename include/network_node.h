@@ -42,6 +42,7 @@ protected:
 
     void setPort(int port, int dst);
     std::shared_ptr<Port> getPort(int port) const;
+    void transmitPacket(int port, const Packet& packet);
 
 private:
     int id_;

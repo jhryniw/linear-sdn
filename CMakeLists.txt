@@ -11,4 +11,5 @@ add_executable(a2sdn
     src/network_node.cpp
     src/controller.cpp
     src/switch.cpp
-    src/flow_rule.cpp)
+    src/flow_rule.cpp
+)

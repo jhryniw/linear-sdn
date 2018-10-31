@@ -10,10 +10,13 @@
 enum PacketType { UNKNOWN, ADMIT, OPEN, ACK, QUERY, ADD, RELAY };
 
 struct Packet {
+
+    // Header information
     PacketType type;
     int srcIP;
     int dstIP;
 
+    // Constructors
     Packet();
     explicit Packet(std::istream& is);
     Packet(PacketType type, int src, int dst);
@@ -22,6 +25,8 @@ struct Packet {
 
     std::string encode() const;
     static std::unique_ptr<Packet> decode(char* msg);
+
+    virtual std::string toString(int src_id, int dst_id) const;
 
 protected:
     virtual void encodePayload(std::ostream& os) const;
@@ -32,6 +37,7 @@ struct OpenPacket : public Packet {
     explicit OpenPacket(std::istream& is);
     OpenPacket(int sw, int left, int right, int ipLow, int ipHigh);
 
+    std::string toString(int src_id, int dst_id) const override;
 protected:
     void encodePayload(std::ostream& os) const override;
 };
@@ -41,6 +47,7 @@ struct AddPacket : public Packet {
     explicit AddPacket(std::istream& is);
     AddPacket(int sw, FlowRule flow_rule);
 
+    std::string toString(int src_id, int dst_id) const override;
 protected:
     void encodePayload(std::ostream& os) const override;
 };

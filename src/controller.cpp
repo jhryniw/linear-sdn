@@ -87,7 +87,7 @@ void Controller::handleQueryPacket(int port, const Packet* qp)
             int dst_port = sw.id > getPort(port)->dst() ? Switch::RIGHT_PORT : Switch::LEFT_PORT;
             FlowRule rule(0, MAX_IP, sw.lowIP, sw.highIP, Action::FORWARD, dst_port);
             AddPacket ap = AddPacket(getPort(port)->dst(), rule);
-            getPort(port)->writePacket(ap);
+            transmitPacket(port, ap);
             return;
         }
     }
@@ -95,5 +95,5 @@ void Controller::handleQueryPacket(int port, const Packet* qp)
     // No switch matches the IP
     FlowRule rule(0, MAX_IP, qp->dstIP, qp->dstIP, Action::DROP, 0);
     AddPacket ap = AddPacket(getPort(port)->dst(), rule);
-    getPort(port)->writePacket(ap);
+    transmitPacket(port, ap);
 }

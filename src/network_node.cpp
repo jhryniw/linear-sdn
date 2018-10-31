@@ -53,7 +53,8 @@ void NetworkNode::loop() {
             if (port_fds_[i].revents & POLLIN) {
                 // We are reading a packet from a switch
                 unique_ptr<Packet> packet = getPort((int) i)->readPacket();
-//                printf("Received packet type= %s srcIP= %d dstIP= %d\n", ToString(packet->type), packet->srcIP, packet->dstIP);
+                printf("\rReceived %s\n", packet->toString((int) i, getId()).c_str());
+                prompt_displayed_ = false;
                 processPacket((int) i, packet);
             }
         }
@@ -80,4 +81,10 @@ void NetworkNode::setPort(int port, int dst) {
 
 shared_ptr<Port> NetworkNode::getPort(int port) const {
     return ports_.at((size_t) port);
+}
+
+void NetworkNode::transmitPacket(int port, const Packet& packet) {
+    getPort(port)->writePacket(packet);
+    printf("\rTransmitted %s\n", packet.toString(getId(), port).c_str());
+    prompt_displayed_ = false;
 }

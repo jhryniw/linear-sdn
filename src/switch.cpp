@@ -18,7 +18,7 @@ Switch::Switch(int id, int swj, int swk, string tf_path, int ip_low, int ip_high
 
     // Send OPEN packet to the controller
     OpenPacket open_p(getId(), swj, swk, ip_low, ip_high);
-    getPort(CONT_PORT)->writePacket(open_p);
+    transmitPacket(CONT_PORT, open_p);
     open_count_++;
 }
 
@@ -31,9 +31,9 @@ void Switch::list()
 {
     int index = 0;
 
-    cout << "Flow table:\n";
+    cout << "\nFlow table:\n";
     for(const auto& rule : flow_table_) {
-        printf("[%d] (srcIP= %d-%d, destIP= %d-%d, action= %s:%d, pri= %d, pktCount= %d)\n",
+        printf("[%d] (src= %d-%d, destIP= %d-%d, action= %s:%d, pri= %d, pktCount= %d)\n",
                 index, rule.srcIP_lo, rule.srcIP_hi, rule.dstIP_lo, rule.dstIP_hi, ToString(rule.actionType),
                 rule.actionVal, rule.pri, rule.pktCount);
         index++;
@@ -104,7 +104,7 @@ void Switch::handleNormalPacket(Packet* p)
             // Forward the packet
             Packet relay(*p);
             relay.type = PacketType::RELAY;
-            getPort(rule->actionVal)->writePacket(relay);
+            transmitPacket(rule->actionVal, relay);
             relay_out_count_++;
         }
 
@@ -118,7 +118,7 @@ void Switch::handleNormalPacket(Packet* p)
 
     // Do not re-query
     if (query_set_.find(qp.encode()) == query_set_.end()) {
-        getPort(CONT_PORT)->writePacket(qp);
+        transmitPacket(CONT_PORT, qp);
         query_set_.emplace(qp.encode());
         query_count_++;
     }

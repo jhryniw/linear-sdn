@@ -29,7 +29,7 @@ std::istream& operator>>(std::istream& is, FlowRule& fr);
 inline const char* ToString(Action a) {
     switch (a)
     {
-        case DELIVER: return "DELIVER";
+        case DELIVER: return "FORWARD"; // We also call this forwarding
         case FORWARD: return "FORWARD";
         case DROP:    return "DROP";
         default:      return "UNKNOWN";
