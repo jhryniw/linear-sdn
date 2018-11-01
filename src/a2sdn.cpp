@@ -52,9 +52,11 @@ int main(int argc, char** argv) {
     }
 
     if (input.isCont) {
+        // Initialize controller
         host = unique_ptr<Controller>(new Controller(input.nSwitch));
         signal(SIGUSR1, ControllerList); // We only setup this signal for the controller
     } else {
+        // Initialize switch
         host = unique_ptr<Switch>(new Switch(input.swi, input.swj, input.swk, input.trafficFile, input.ipLow, input.ipHigh));
     }
 

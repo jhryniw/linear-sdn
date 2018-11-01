@@ -24,11 +24,30 @@ public:
     Port(int src, int dst);
     ~Port();
 
+    /**
+     * @return the read file descriptor
+     */
     int rfd() const;
+
+    /**
+     * @return the write file descriptor
+     */
     int wfd() const;
+
+    /**
+     * @return the source node id
+     */
     int src() const;
+
+    /**
+     * @return the destination node id
+     */
     int dst() const;
 
+    /**
+     * Read a packet incoming from the destination
+     * @return
+     */
     std::unique_ptr<Packet> readPacket();
     void writePacket(const Packet& packet);
 
@@ -42,6 +61,11 @@ private:
     fifo_t r_fifo_;
     fifo_t w_fifo_;
 
+    /**
+     * Creates one FIFO for reading or writing
+     * The src and dst should not be different between calls
+     * @return a FIFO struct containing an opened file descriptor
+     */
     fifo_t createFifo(int src, int dst, char rw);
 };
 

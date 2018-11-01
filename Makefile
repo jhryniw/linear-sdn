@@ -1,4 +1,4 @@
-CXX_FLAGS = -std=c++11 -Wall -g
+CXX_FLAGS = -std=c++11 -Wall
 
 all: switch.o controller.o src/a2sdn.cpp
 	g++ $(CXX_FLAGS) src/a2sdn.cpp bin/*.o -Iinclude -o a2sdn
@@ -26,5 +26,5 @@ clean:
 
 tar:
 	find . -maxdepth 2 -type f \( -name '*.cpp' -o -name '*.h' -o -name '.placeholder' \) | sed -e 's/\.\///g' | \
-        tar -cvf submit.tar --files-from - Makefile
+        tar -cvf submit.tar --files-from - design_document.pdf Makefile
  

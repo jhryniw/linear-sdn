@@ -52,11 +52,14 @@ void Switch::loop()
         return;
     }
 
+    // Process a packet from the queue. If it still can't be handled it will be added
+    // again at the back of the queue
     if (!packet_queue_.empty()) {
         processPacket(3, unique_ptr<Packet>(new Packet(packet_queue_.front())));
         packet_queue_.pop_front();
     }
 
+    // Process another packet from the traffic file
     if (!traffic_file_.eof()) {
         Packet traffic(PacketType::ADMIT, getId(), CONT_PORT);
 

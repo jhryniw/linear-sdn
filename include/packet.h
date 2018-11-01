@@ -11,7 +11,7 @@ enum PacketType { UNKNOWN, ADMIT, OPEN, ACK, QUERY, ADD, RELAY };
 
 struct Packet {
 
-    // Header information
+    // Type and header information
     PacketType type;
     int srcIP;
     int dstIP;
@@ -33,17 +33,24 @@ protected:
 };
 
 struct OpenPacket : public Packet {
+    // Switch information payload
     int sw, left, right, ipLow, ipHigh;
+
+    // Constructors
     explicit OpenPacket(std::istream& is);
     OpenPacket(int sw, int left, int right, int ipLow, int ipHigh);
 
     std::string toString(int src_id, int dst_id) const override;
+
 protected:
     void encodePayload(std::ostream& os) const override;
 };
 
 struct AddPacket : public Packet {
+    // Flow rule payload
     FlowRule flowRule;
+
+    // Constructors
     explicit AddPacket(std::istream& is);
     AddPacket(int sw, FlowRule flow_rule);
 

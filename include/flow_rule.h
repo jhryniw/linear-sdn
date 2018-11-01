@@ -5,6 +5,9 @@
 
 enum Action { DELIVER, FORWARD, DROP };
 
+/**
+ * The Flow Rule data structure
+ */
 struct FlowRule {
     static constexpr int MIN_PRI = 4;
 
