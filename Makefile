@@ -26,5 +26,5 @@ clean:
 
 tar:
 	find . -maxdepth 2 -type f \( -name '*.cpp' -o -name '*.h' -o -name '.placeholder' \) | sed -e 's/\.\///g' | \
-        tar -cf submit.tar --files-from - Makefile
+        tar -cvf submit.tar --files-from - Makefile
  
