@@ -48,11 +48,16 @@ void Switch::list()
 void Switch::loop()
 {
     if (!ack_received_) {
-        // Pass
-    } else if (!packet_queue_.empty()) {
+        NetworkNode::loop();
+        return;
+    }
+
+    if (!packet_queue_.empty()) {
         processPacket(3, unique_ptr<Packet>(new Packet(packet_queue_.front())));
         packet_queue_.pop_front();
-    } else if (!traffic_file_.eof()) {
+    }
+
+    if (!traffic_file_.eof()) {
         Packet traffic(PacketType::ADMIT, getId(), CONT_PORT);
 
         if (nextPacket(traffic)) {
