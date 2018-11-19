@@ -166,12 +166,9 @@ void SocketPort::connect(const std::string& str_ip, int port) {
     serv.sin_addr = { .s_addr = server_ip };
     serv.sin_port = static_cast<unsigned short>(port);
 
-    cout << "Connecting to server ";
-    cout.flush();
     if (::connect(sfd_, (sockaddr *)&serv, sizeof(serv)) < 0) {
         sprintf(err_str, "Could not connect to %s", str_ip.c_str());
         perror(err_str);
         fflush(stdout);
     }
-    cout << "done" << endl;
 }

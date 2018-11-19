@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <signal.h>
+#include <arpa/inet.h>
 
 #include <network_node.h>
 #include <switch.h>
@@ -18,8 +19,8 @@ using namespace std;
 
 unique_ptr<NetworkNode> host;
 
-static const char* CONT_USAGE = "usage: a2sdn cont nSwitch";
-static const char* SWI_USAGE = "usage: a2sdn swi trafficFile [null|swj] [null|swk] IPlow-IPhigh";
+static const char* CONT_USAGE = "usage: a2sdn cont nSwitch portNumber";
+static const char* SWI_USAGE = "usage: a2sdn swi trafficFile [null|swj] [null|swk] IPlow-IPhigh serverAddress portNumber";
 
 struct input_t {
     bool isCont;
@@ -30,6 +31,8 @@ struct input_t {
     string trafficFile;
     int ipLow;
     int ipHigh;
+    string serverAddress;
+    int portNumber;
 };
 
 // Prototypes
@@ -50,13 +53,13 @@ int main(int argc, char** argv) {
 
     if (input.isCont) {
         // Initialize controller
-        host = unique_ptr<Controller>(new Controller(input.nSwitch, 9912));
+        host = unique_ptr<Controller>(new Controller(input.nSwitch, input.portNumber));
         signal(SIGUSR1, ControllerList); // We only setup this signal for the controller
     } else {
         // Initialize switch
         host = unique_ptr<Switch>(
                 new Switch(input.swi, input.swj, input.swk, input.trafficFile, input.ipLow,
-                           input.ipHigh, "127.0.0.1", 9912));
+                           input.ipHigh, input.serverAddress, input.portNumber));
     }
 
     // This loop is run at 100 hz
@@ -106,6 +109,8 @@ input_t ParseInput(const vector<string>& all_args) {
     int swi = -1, swj = -1, swk = -1;
     string trafficFile;
     int ipLow = -1, ipHigh = -1;
+    string serverAddress;
+    int portNumber = -1;
 
     try {
 
@@ -120,7 +125,7 @@ input_t ParseInput(const vector<string>& all_args) {
         }
 
         if (isCont) {
-            if (all_args.size() > 3) {
+            if (all_args.size() > 4) {
                 cout << CONT_USAGE << "\nToo many arguments" << endl;
                 exit(1);
             }
@@ -129,8 +134,13 @@ input_t ParseInput(const vector<string>& all_args) {
                 cout << CONT_USAGE << "\nExpected: <nSwitch> Got: " << all_args.at(2) << endl;
                 exit(1);
             }
+
+            if (sscanf(all_args.at(3).c_str(), "%d", &portNumber) != 1) {
+                cout << SWI_USAGE << "\nExpected: portNumber Got: " << all_args.at(3) << endl;
+                exit(1);
+            }
         } else {
-            if (all_args.size() > 6) {
+            if (all_args.size() > 8) {
                 cout << SWI_USAGE << "\nToo many arguments" << endl;
                 exit(1);
             }
@@ -171,6 +181,20 @@ input_t ParseInput(const vector<string>& all_args) {
                 cout << SWI_USAGE << "\nExpected: IPlow-IPhigh Got: " << all_args.at(5) << endl;
                 exit(1);
             }
+
+            serverAddress = all_args.at(6);
+            in_addr_t server_ip = 0;
+            if (inet_pton(AF_INET, all_args.at(6).c_str(), &server_ip) < 1) {
+                cout << "\nInvalid server address " << all_args.at(6) << endl;
+                exit(1);
+            } else {
+
+            }
+
+            if (sscanf(all_args.at(7).c_str(), "%d", &portNumber) != 1) {
+                cout << SWI_USAGE << "\nExpected: portNumber Got: " << all_args.at(7) << endl;
+                exit(1);
+            }
         }
     } catch (const out_of_range&) {
         cout << "Too few arguments" << endl;
@@ -183,5 +207,5 @@ input_t ParseInput(const vector<string>& all_args) {
         exit(1);
     }
 
-    return input_t { isCont, nSwitch, swi, swj, swk, trafficFile, ipLow, ipHigh };
+    return { isCont, nSwitch, swi, swj, swk, trafficFile, ipLow, ipHigh, serverAddress, portNumber };
 }
