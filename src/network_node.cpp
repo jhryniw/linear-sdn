@@ -51,11 +51,12 @@ void NetworkNode::loop() {
     if (poll(port_fds_.data(), port_fds_.size(), 0)) {
         for (size_t i = 0; i < port_fds_.size(); i++) {
             if (port_fds_[i].revents & POLLIN) {
-                // We are reading a packet from a switch
-                unique_ptr<Packet> packet = getPort((int) i)->readPacket();
-                printf("\rReceived %s\n", packet->toString((int) i, getId()).c_str());
-                prompt_displayed_ = false;
-                processPacket((int) i, packet);
+                unique_ptr<Packet> packet;
+
+                if (packet = receivePacket((int) i)) {
+                    // We are reading a packet from a switch
+                    processPacket((int) i, packet);
+                }
             }
         }
     }
@@ -74,13 +75,35 @@ int NetworkNode::getId() const {
     return id_;
 }
 
-void NetworkNode::setPort(int port, int dst) {
-    ports_.at((size_t) port) = shared_ptr<Port>(new Port(id_, dst));
+void NetworkNode::setPort(int port, shared_ptr<Port> port_ptr) {
+    ports_.at((size_t) port) = std::move(port_ptr);
+    port_fds_.at((size_t) port) = pollfd { ports_.at((size_t) port)->rfd(), POLLIN, 0 };
+}
+
+void NetworkNode::setFifoPort(int port, int dst) {
+    ports_.at((size_t) port) = shared_ptr<Port>(new FifoPort(id_, dst));
+    port_fds_.at((size_t) port) = pollfd { ports_.at((size_t) port)->rfd(), POLLIN, 0 };
+}
+
+void NetworkNode::setSocketPort(int port, int dst, const std::string& dst_ip, int dst_port) {
+    ports_.at((size_t) port) = shared_ptr<Port>(new SocketPort(id_, dst, dst_ip, dst_port));
     port_fds_.at((size_t) port) = pollfd { ports_.at((size_t) port)->rfd(), POLLIN, 0 };
 }
 
 shared_ptr<Port> NetworkNode::getPort(int port) const {
     return ports_.at((size_t) port);
+}
+
+void NetworkNode::closePort(int port) {
+    ports_.at((size_t) port) = nullptr;
+    port_fds_.at((size_t) port) = NULL_POLL_FD;
+}
+
+unique_ptr<Packet> NetworkNode::receivePacket(int port) {
+    unique_ptr<Packet> packet = getPort(port)->readPacket();
+    printf("\rReceived %s\n", packet->toString(port, getId()).c_str());
+    prompt_displayed_ = false;
+    return packet;
 }
 
 void NetworkNode::transmitPacket(int port, const Packet& packet) {

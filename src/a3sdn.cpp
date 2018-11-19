@@ -14,9 +14,6 @@
 #include <switch.h>
 #include <controller.h>
 
-#define MAX_NSW 7
-#define MAXIP 1000
-
 using namespace std;
 
 unique_ptr<NetworkNode> host;
@@ -53,11 +50,13 @@ int main(int argc, char** argv) {
 
     if (input.isCont) {
         // Initialize controller
-        host = unique_ptr<Controller>(new Controller(input.nSwitch));
+        host = unique_ptr<Controller>(new Controller(input.nSwitch, 9912));
         signal(SIGUSR1, ControllerList); // We only setup this signal for the controller
     } else {
         // Initialize switch
-        host = unique_ptr<Switch>(new Switch(input.swi, input.swj, input.swk, input.trafficFile, input.ipLow, input.ipHigh));
+        host = unique_ptr<Switch>(
+                new Switch(input.swi, input.swj, input.swk, input.trafficFile, input.ipLow,
+                           input.ipHigh, "127.0.0.1", 9912));
     }
 
     // This loop is run at 100 hz
@@ -85,8 +84,8 @@ inline void validate_sw (int sw) {
 }
 
 inline void validate_ip (int ip) {
-    if (ip < 0 || ip > MAXIP) {
-        printf("Invalid IP %d. Must be in range [0-%d]\n", ip, MAXIP);
+    if (ip < 0 || ip > MAX_IP) {
+        printf("Invalid IP %d. Must be in range [0-%d]\n", ip, MAX_IP);
         exit(1);
     }
 }

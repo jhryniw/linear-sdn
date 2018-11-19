@@ -62,7 +62,7 @@ string Packet::toString(int src_id, int dst_id) const {
     return oss.str();
 }
 
-unique_ptr<Packet> Packet::decode(char* msg) {
+unique_ptr<Packet> Packet::decode(const char* msg) {
     unique_ptr<Packet> p;
     PacketType type;
     istringstream iss(msg);
@@ -80,6 +80,7 @@ unique_ptr<Packet> Packet::decode(char* msg) {
         case QUERY:
         case RELAY:
         case ADMIT:
+        case CLOSE:
         case UNKNOWN:
             p = unique_ptr<Packet>(new Packet(iss));
             p->type = type;

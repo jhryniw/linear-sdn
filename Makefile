@@ -1,7 +1,7 @@
 CXX_FLAGS = -std=c++11 -Wall
 
-all: switch.o controller.o src/a2sdn.cpp
-	g++ $(CXX_FLAGS) src/a2sdn.cpp bin/*.o -Iinclude -o a2sdn
+all: switch.o controller.o src/a3sdn.cpp
+	g++ $(CXX_FLAGS) src/a3sdn.cpp bin/*.o -Iinclude -o a3sdn
 
 switch.o: network_node.o include/switch.h src/switch.cpp
 	g++ $(CXX_FLAGS) -c src/switch.cpp -Iinclude -o bin/switch.o
@@ -22,9 +22,8 @@ flow_rule.o: include/flow_rule.h src/flow_rule.cpp
 	g++ ${CXX_FLAGS} -c src/flow_rule.cpp -Iinclude -o bin/flow_rule.o
 
 clean:
-	rm -f bin/*.o fifo-* a2sdn
+	rm -f bin/*.o fifo-* a3sdn
 
 tar:
 	find . -maxdepth 2 -type f \( -name '*.cpp' -o -name '*.h' -o -name '.placeholder' \) | sed -e 's/\.\///g' | \
         tar -cvf submit.tar --files-from - design_document.pdf Makefile
- 

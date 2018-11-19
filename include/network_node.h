@@ -15,17 +15,18 @@
 #include <sys/stat.h>
 #include <poll.h>
 
+#include <utils.h>
 #include <packet.h>
 #include <port.h>
 
 #define MAX_BUF 128
 
-static constexpr int MAX_IP = 1000;
-
 class NetworkNode {
 public:
 
     NetworkNode(int id, int max_ports);
+
+    virtual ~NetworkNode() = default;
 
     /**
      * The main loop. Polls stdin for commands and all open ports for incoming packets
@@ -65,11 +66,25 @@ protected:
     bool node_ok;
 
     /**
-     * Opens a new port
+     * Moves an existing port into a port slot. Used for registering unknown socket connections
+     * @param port the port number (0-indexed)
+     * @param other existing (unknown) port
+     */
+    void setPort(int port, std::shared_ptr<Port> port_ptr);
+
+    /**
+     * Opens a new FIFO port
      * @param port the port number (0-indexed)
      * @param dst the destination node id
      */
-    void setPort(int port, int dst);
+    void setFifoPort(int port, int dst);
+
+    /**
+     * Opens a new socket port. Intended for opening client sockets
+     * @param port the port number (0-indexed)
+     * @param dst the destination node id
+     */
+    void setSocketPort(int port, int dst, const std::string& dst_ip, int dst_port);
 
     /**
      * Get an open port
@@ -77,6 +92,18 @@ protected:
      * @return a pointer to the port
      */
     std::shared_ptr<Port> getPort(int port) const;
+
+    /**
+     * Closes an open port
+     * @param port the port number (0-indexed)
+     */
+    void closePort(int port);
+
+    /**
+     * Receives a packet from a port
+     * @param port the port number
+     */
+    std::unique_ptr<Packet> receivePacket(int port);
 
     /**
      * Sends a packet on a port.

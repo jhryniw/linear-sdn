@@ -22,7 +22,8 @@ public:
     static constexpr int RIGHT_PORT = 2;
     static constexpr int NULL_SW = -1;
 
-    Switch(int id, int swj, int swk, std::string tf_path, int ip_low, int ip_high);
+    Switch(int id, int swj, int swk, const std::string& tf_path, int ip_low, int ip_high,
+           const std::string& server_ip, int server_port);
 
     ~Switch();
 

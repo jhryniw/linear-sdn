@@ -1,6 +1,7 @@
-#ifndef FIFO_H
-#define FIFO_H
+#ifndef PORT_H
+#define PORT_H
 
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <memory>
@@ -10,46 +11,81 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+#include <utils.h>
 #include <packet.h>
 
 /**
- * Creates bidirectional communication between two nodes
- * src: The node id creating the fifo
- * dst: The node id to connect to
+ * Bidirectional communication channel between two nodes
  */
 class Port {
 public:
 
-    Port() = default;
+    Port();
     Port(int src, int dst);
-    ~Port();
-
-    /**
-     * @return the read file descriptor
-     */
-    int rfd() const;
-
-    /**
-     * @return the write file descriptor
-     */
-    int wfd() const;
+    virtual ~Port() = default;
 
     /**
      * @return the source node id
      */
-    int src() const;
+    int src() const { return src_; };
+
+    /**
+     * Change the source node id
+     */
+    void setSrc(int src) { src_ = src; };
 
     /**
      * @return the destination node id
      */
-    int dst() const;
+    int dst() const { return dst_; };
 
     /**
-     * Read a packet incoming from the destination
-     * @return
+     * Change the destination node id
      */
-    std::unique_ptr<Packet> readPacket();
-    void writePacket(const Packet& packet);
+    void setDst(int dst) { dst_ = dst; };
+
+    /**
+     * @return the read file descriptor
+     */
+    virtual int rfd() const = 0;
+
+    /**
+     * @return the write file descriptor
+     */
+    virtual int wfd() const = 0;
+
+    /**
+     * Read an incoming packet from the destination
+     */
+    virtual std::unique_ptr<Packet> readPacket();
+
+    /**
+     * Send an outgoing packet to the destination
+     */
+    virtual void writePacket(const Packet& packet);
+
+private:
+    int src_;
+    int dst_;
+};
+
+
+class FifoPort : public Port {
+public:
+
+    FifoPort() = default;
+    FifoPort(int src, int dst);
+    ~FifoPort() override;
+
+    int rfd() const override;
+
+    int wfd() const override;
+
+    void writePacket(const Packet& packet) override;
 
 private:
     struct fifo_t {
@@ -69,4 +105,27 @@ private:
     fifo_t createFifo(int src, int dst, char rw);
 };
 
-#endif //FIFO_H
+
+class SocketPort : public Port {
+public:
+
+    SocketPort();
+    explicit SocketPort(int sfd);
+    SocketPort(int src, int dst, const std::string& dst_ip, int dst_port);
+    ~SocketPort() override;
+
+    int rfd() const override;
+
+    int wfd() const override;
+
+    std::unique_ptr<Packet> readPacket() override;
+
+    void writePacket(const Packet& packet) override;
+
+private:
+    int sfd_;
+
+    void connect(const std::string& str_server_ip, int server_port);
+};
+
+#endif //PORT_H

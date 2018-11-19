@@ -7,7 +7,7 @@
 
 #include <flow_rule.h>
 
-enum PacketType { UNKNOWN, ADMIT, OPEN, ACK, QUERY, ADD, RELAY };
+enum PacketType { UNKNOWN, ADMIT, OPEN, ACK, QUERY, ADD, RELAY, CLOSE };
 
 struct Packet {
 
@@ -24,7 +24,7 @@ struct Packet {
     virtual ~Packet() = default;
 
     std::string encode() const;
-    static std::unique_ptr<Packet> decode(char* msg);
+    static std::unique_ptr<Packet> decode(const char* msg);
 
     virtual std::string toString(int src_id, int dst_id) const;
 
@@ -71,6 +71,7 @@ inline const char* ToString(PacketType v) {
         case QUERY: return "QUERY";
         case ADD:   return "ADD";
         case RELAY: return "RELAY";
+        case CLOSE: return "CLOSE";
         default:    return "UNKNOWN";
     }
 }

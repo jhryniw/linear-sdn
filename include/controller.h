@@ -13,6 +13,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 #include <utils.h>
 #include <switch.h>
 #include <network_node.h>
@@ -32,12 +36,19 @@ struct SwitchInfo {
 class Controller : public NetworkNode {
 public:
 
-    explicit Controller(int nSwitch);
+    Controller(int nSwitch, int listen_port);
+
+    ~Controller() override;
 
     /**
      * List switch information and packet stats
      */
     void list() override;
+
+    /**
+     * The main loop, reads and responds to incoming packets
+     */
+    void loop() override;
 
     /**
      * Main entry point for incoming packets
@@ -52,6 +63,10 @@ public:
     std::string getType() const override;
 
 private:
+    pollfd listen_fd_;
+    std::vector<pollfd> unknown_conns_;
+    std::vector<std::shared_ptr<Port>> unknown_ports_;
+
     std::vector<SwitchInfo> switches_;
     int open_count_ = 0, ack_count_ = 0, query_count_ = 0, add_count_ = 0;
 
@@ -68,6 +83,34 @@ private:
      * @param qp the query packet
      */
     void handleQueryPacket(int port, const Packet* qp);
+
+    /**
+     * Binds listening socket
+     * @param port a networking port to listen on
+     */
+    void bind(int listen_port);
+
+    /**
+     * Activate listening socket
+     */
+    void listen();
+
+    /**
+     * Accept incoming switch connections
+     */
+    void accept();
+
+    /**
+     * Register an unknown socket connection (no switch info)
+     * @param sfd the socket file descriptor
+     */
+    void addUnknownConnection(int sfd);
+
+    /**
+     * Remove an unknown socket connection
+     * @param port the unknown port number
+     */
+    void removeUnknownConnection(int port);
 };
 
 #endif //CONTROLLER_H

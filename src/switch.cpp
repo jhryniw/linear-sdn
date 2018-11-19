@@ -2,16 +2,17 @@
 
 using namespace std;
 
-Switch::Switch(int id, int swj, int swk, string tf_path, int ip_low, int ip_high) :
+Switch::Switch(int id, int swj, int swk, const string& tf_path, int ip_low, int ip_high,
+               const string& server_ip, int server_port) :
     NetworkNode(id, 4),
     traffic_file_(tf_path),
     ip_low_(ip_low),
     ip_high_(ip_high),
     ack_received_(false)
 {
-    setPort(CONT_PORT, 0);
-    setPort(LEFT_PORT, swj);
-    setPort(RIGHT_PORT, swk);
+    setSocketPort(CONT_PORT, 0, server_ip, server_port);
+    setFifoPort(LEFT_PORT, swj);
+    setFifoPort(RIGHT_PORT, swk);
 
     // Install initial flow rule
     flow_table_.emplace_back(0, MAX_IP, ip_low, ip_high, Action::DELIVER, 3);
@@ -93,6 +94,9 @@ void Switch::processPacket(int port, const std::unique_ptr<Packet>& packet)
             break;
         case ADD:
             handleAddPacket(dynamic_cast<AddPacket*>(packet.get()));
+            break;
+        case CLOSE:
+            closePort(port);
             break;
         // A switch should not receive the following Packet types. Ignore them
         case OPEN:
