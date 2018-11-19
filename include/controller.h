@@ -72,14 +72,14 @@ private:
 
     /**
      * Register a new switch and send back an ACK message
-     * @param port the switch port number (should also its id)
+     * @param port the switch port number
      * @param op the open packet
      */
     void handleOpenPacket(int port, const OpenPacket* op);
 
     /**
      * Handle a switch query and send back an appropriate ADD message
-     * @param port the switch port number (should also its id)
+     * @param port the switch port number
      * @param qp the query packet
      */
     void handleQueryPacket(int port, const Packet* qp);
@@ -99,6 +99,12 @@ private:
      * Accept incoming switch connections
      */
     void accept();
+
+    /**
+     * Unregister a switch connection
+     * @param port the switch port number
+     */
+    void closeConnection(int port);
 
     /**
      * Register an unknown socket connection (no switch info)

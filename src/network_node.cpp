@@ -111,3 +111,8 @@ void NetworkNode::transmitPacket(int port, const Packet& packet) {
     printf("\rTransmitted %s\n", packet.toString(getId(), port).c_str());
     prompt_displayed_ = false;
 }
+
+void NetworkNode::displayLine(const char *line) {
+    cout << '\r' << line << endl;
+    prompt_displayed_ = false;
+}

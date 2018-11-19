@@ -112,6 +112,12 @@ protected:
      */
     void transmitPacket(int port, const Packet& packet);
 
+    /**
+     * Refreshes command prompt with display text above
+     * @param line text (no new line)
+     */
+    void displayLine(const char *line);
+
 private:
     int id_;
     std::vector<pollfd> port_fds_;

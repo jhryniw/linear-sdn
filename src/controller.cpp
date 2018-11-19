@@ -81,7 +81,7 @@ void Controller::processPacket(int port, const unique_ptr<Packet>& packet) {
     switch (packet->type) {
         // The controller shouldn't receive OPEN packets through this callback
         case OPEN:
-            std::cout << "Error: received OPEN packet, but did not process" << std::endl;
+            cout << "Error: received OPEN packet, but did not process" << endl;
             break;
         case QUERY:
             handleQueryPacket(port, packet.get());
@@ -89,7 +89,7 @@ void Controller::processPacket(int port, const unique_ptr<Packet>& packet) {
             add_count_++;
             break;
         case CLOSE:
-            closePort(port);
+            closeConnection(port);
             break;
         // The controller shouldn't receive these packet types, ignore them
         case RELAY:
@@ -169,6 +169,13 @@ void Controller::accept() {
             addUnknownConnection(conn_fd);
         }
     }
+}
+
+void Controller::closeConnection(int port) {
+    char close_msg[50];
+    sprintf(close_msg, "Lost connection to sw%d", port + 1);
+    closePort(port);
+    displayLine(close_msg);
 }
 
 void Controller::addUnknownConnection(int sfd) {
