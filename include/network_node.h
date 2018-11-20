@@ -128,7 +128,7 @@ protected:
      * @param port the port number
      * @return the node id corresponding to that port number
      */
-    virtual int portId(int port) const;
+    int portId(int port) const;
 
 private:
     int id_;

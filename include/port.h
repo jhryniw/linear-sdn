@@ -69,8 +69,8 @@ public:
     virtual void writePacket(const Packet& packet);
 
 private:
-    int src_;
-    int dst_;
+    int src_; /** The source node id */
+    int dst_; /** the destination node id */
 };
 
 
@@ -125,6 +125,11 @@ public:
 private:
     int sfd_;
 
+    /**
+     * Attempt connection with server
+     * @param str_server_ip server ip as a string (e.g 127.0.0.1)
+     * @param server_port the server's listening port number
+     */
     void connect(const std::string& str_server_ip, int server_port);
 };
 
