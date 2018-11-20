@@ -118,6 +118,11 @@ protected:
      */
     void displayLine(const char *line);
 
+    /**
+     * Overwrites the current line with spaces
+     */
+    void clearLine();
+
 private:
     int id_;
     std::vector<pollfd> port_fds_;

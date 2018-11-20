@@ -116,3 +116,8 @@ void NetworkNode::displayLine(const char *line) {
     cout << '\r' << line << endl;
     prompt_displayed_ = false;
 }
+
+void NetworkNode::clearLine() {
+    cout << '\r' << "                          " << '\r';
+    fflush(stdout);
+}

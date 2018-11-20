@@ -4,7 +4,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 include_directories(include)
 
-add_executable(a2sdn
+add_executable(a3sdn
         src/a3sdn.cpp
     src/packet.cpp
     src/port.cpp

@@ -107,13 +107,16 @@ void Controller::handleOpenPacket(int port, const OpenPacket* op)
     switches_.at((size_t) (op->sw - 1)) = SwitchInfo(op->sw, op->left, op->right, op->ipLow, op->ipHigh);
     printf("\rReceived %s\n", op->toString(op->sw, getId()).c_str());
 
+    int sw_port = op->sw - 1;
+
     // Move unknown port to known port
+    unknown_ports_.at((size_t) port)->setSrc(Switch::CONT_PORT);
     unknown_ports_.at((size_t) port)->setDst(op->sw);
-    setPort(op->sw - 1, unknown_ports_.at((size_t) port));
+    setPort(sw_port, unknown_ports_.at((size_t) port));
     removeUnknownConnection(port);
 
-    Packet ack(PacketType::ACK, getId(), port + 1);
-    transmitPacket(port, ack);
+    Packet ack(PacketType::ACK, getId(), op->sw);
+    transmitPacket(sw_port, ack);
     ack_count_++;
 }
 

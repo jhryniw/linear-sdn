@@ -5,10 +5,11 @@ using namespace std;
 Switch::Switch(int id, int swj, int swk, const string& tf_path, int ip_low, int ip_high,
                const string& server_ip, int server_port) :
     NetworkNode(id, 4),
+    state_(SwitchState::PRE_ACK),
     traffic_file_(tf_path),
     ip_low_(ip_low),
     ip_high_(ip_high),
-    ack_received_(false)
+    delay_end_(std::chrono::system_clock::now())
 {
     setSocketPort(CONT_PORT, 0, server_ip, server_port);
     setFifoPort(LEFT_PORT, swj);
@@ -48,26 +49,15 @@ void Switch::list()
 
 void Switch::loop()
 {
-    if (!ack_received_) {
-        NetworkNode::loop();
-        return;
-    }
-
-    // Process a packet from the queue. If it still can't be handled it will be added
-    // again at the back of the queue
-    if (!packet_queue_.empty()) {
-        processPacket(3, unique_ptr<Packet>(new Packet(packet_queue_.front())));
-        packet_queue_.pop_front();
-    }
-
-    // Process another packet from the traffic file
-    if (!traffic_file_.eof()) {
-        Packet traffic(PacketType::ADMIT, getId(), CONT_PORT);
-
-        if (nextPacket(traffic)) {
-            admit_count_++;
-            processPacket(3, unique_ptr<Packet>(new Packet(traffic)));
-        }
+    switch (state_) {
+        case PRE_ACK:
+            break;
+        case DELAY:
+            if (isDelayExpired()) state_ = NORMAL;
+            break;
+        case NORMAL:
+            processTraffic();
+            break;
     }
 
     NetworkNode::loop();
@@ -90,7 +80,7 @@ void Switch::processPacket(int port, const std::unique_ptr<Packet>& packet)
             break;
         case ACK:
             ack_count_++;
-            ack_received_ = true;
+            state_ = NORMAL;
             break;
         case ADD:
             handleAddPacket(dynamic_cast<AddPacket*>(packet.get()));
@@ -164,31 +154,81 @@ FlowRule* Switch::matchRule(const Packet& packet)
     return nullptr;
 }
 
-bool Switch::nextPacket(Packet& packet)
+void Switch::processTraffic() {
+    // Process a packet from the queue. If it still can't be handled it will be added
+    // again at the back of the queue
+    if (!packet_queue_.empty()) {
+        processPacket(3, unique_ptr<Packet>(new Packet(packet_queue_.front())));
+        packet_queue_.pop_front();
+    }
+
+    // Process another packet from the traffic file
+    if (!traffic_file_.eof()) {
+        Traffic traffic = nextTraffic();
+
+        if (traffic.isValid) {
+            if (traffic.isDelay) {
+                char delay_msg[60];
+                sprintf(delay_msg, "\n** Entering a delay period of %d msec\n", traffic.delayMs);
+                startDelay(traffic.delayMs);
+                clearLine();
+                displayLine(delay_msg);
+            } else {
+                admit_count_++;
+                processPacket(3, unique_ptr<Packet>(new Packet(traffic.packet)));
+            }
+        }
+    }
+}
+
+Switch::Traffic Switch::nextTraffic()
 {
     int sw;
     char traffic_buf[256];
-    string traffic;
+    string traffic_line;
+    Traffic traffic {
+        .isValid = false,
+        .isDelay = false,
+        .delayMs = 0,
+        .packet = Packet(PacketType::ADMIT, getId(), CONT_PORT)
+    };
 
     while (!traffic_file_.eof()) {
         memset(traffic_buf, 0, 256);
         traffic_file_.getline(traffic_buf, 256);
 
-        traffic = string(traffic_buf);
+        traffic_line = string(traffic_buf);
 
         // Ignore empty or commented lines
-        if (traffic.empty() || traffic.find('#') == 0) {
+        if (traffic_line.empty() || traffic_line.find('#') == 0) {
             continue;
         }
 
-        if (sscanf(traffic_buf, "sw%d %d %d", &sw, &packet.srcIP, &packet.dstIP) == 3) {
+        if (sscanf(traffic_buf, "sw%d", &sw) == 1) {
             if (sw == getId()) {
-                return true;
+                if (sscanf(traffic_buf, "sw%d %d %d", &sw, &traffic.packet.srcIP, &traffic.packet.dstIP) == 3) {
+                    traffic.isValid = true;
+                    return traffic;
+                } else if (sscanf(traffic_buf, "sw%d delay %d", &sw, &traffic.delayMs) == 2) {
+                    traffic.isValid = true;
+                    traffic.isDelay = true;
+                    return traffic;
+                } else {
+                    printf("Could not interpret traffic line \"%s\"", traffic_buf);
+                }
             }
-        } else {
-            printf("Could not interpret traffic line \"%s\"", traffic_buf);
         }
     }
 
-    return false;
+    return traffic;
+}
+
+void Switch::startDelay(long delay_ms) {
+    delay_end_ = std::chrono::system_clock::now() +
+            std::chrono::duration<long, std::milli>(delay_ms);
+    state_ = DELAY;
+}
+
+bool Switch::isDelayExpired() {
+    return std::chrono::system_clock::now() >= delay_end_;
 }

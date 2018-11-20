@@ -14,6 +14,9 @@
 #include <packet.h>
 #include <flow_rule.h>
 #include <network_node.h>
+#include <chrono>
+
+using sys_time = std::chrono::time_point<std::chrono::system_clock>;
 
 class Switch : public NetworkNode {
 public:
@@ -25,7 +28,7 @@ public:
     Switch(int id, int swj, int swk, const std::string& tf_path, int ip_low, int ip_high,
            const std::string& server_ip, int server_port);
 
-    ~Switch();
+    ~Switch() override;
 
     /**
      * Prints the flow table and packet stats
@@ -50,6 +53,18 @@ public:
     std::string getType() const override;
 
 private:
+    enum SwitchState { PRE_ACK, DELAY, NORMAL };
+
+    struct Traffic {
+        bool isValid;
+        bool isDelay;
+        int delayMs;
+        Packet packet;
+    };
+
+    /** The switch state */
+    SwitchState state_;
+
     /** The flow table */
     std::list<FlowRule> flow_table_;
 
@@ -66,7 +81,8 @@ private:
     int admit_count_ = 0, ack_count_ = 0, add_rule_count_ = 0, relay_in_count_ = 0;
     int open_count_ = 0, query_count_ = 0, relay_out_count_ = 0;
 
-    bool ack_received_;
+    // Delay info
+    sys_time delay_end_;
 
     /**
      * Handles the RELAY and ADMIT packets based on the flow table
@@ -94,11 +110,28 @@ private:
     FlowRule* matchRule(const Packet& packet);
 
     /**
-     * Fetch the next packet from the traffic file
-     * @param packet output packet
-     * @return true if we read a packet, otherwise false
+     * Process a packet from the packet queue and/or the traffic file
      */
-    bool nextPacket(Packet& packet);
+    void processTraffic();
+
+    /**
+     * Fetch the next traffic instruction from the traffic file
+     * May return either EOF (traffic is not valid), the next packet or a delay
+     * @return Traffic struct with next packet or delay or EOF
+     */
+    Traffic nextTraffic();
+
+    /**
+     * Sets the switch into DELAY mode for the next delay_ms milliseconds
+     * @param delay_ms The delay time in milliseconds
+     */
+    void startDelay(long delay_ms);
+
+    /**
+     * Polls if the delay has expired
+     * @return true if delay has expired
+     */
+    bool isDelayExpired();
 };
 
 #endif //SWITCH_H
