@@ -101,14 +101,14 @@ void NetworkNode::closePort(int port) {
 
 unique_ptr<Packet> NetworkNode::receivePacket(int port) {
     unique_ptr<Packet> packet = getPort(port)->readPacket();
-    printf("\rReceived %s\n", packet->toString(port, getId()).c_str());
+    printf("\rReceived %s\n", packet->toString(portId(port), getId()).c_str());
     prompt_displayed_ = false;
     return packet;
 }
 
 void NetworkNode::transmitPacket(int port, const Packet& packet) {
     getPort(port)->writePacket(packet);
-    printf("\rTransmitted %s\n", packet.toString(getId(), port).c_str());
+    printf("\rTransmitted %s\n", packet.toString(getId(), portId(port)).c_str());
     prompt_displayed_ = false;
 }
 
@@ -120,4 +120,8 @@ void NetworkNode::displayLine(const char *line) {
 void NetworkNode::clearLine() {
     cout << '\r' << "                          " << '\r';
     fflush(stdout);
+}
+
+int NetworkNode::portId(int port) const {
+    return getPort(port)->dst();
 }

@@ -123,6 +123,13 @@ protected:
      */
     void clearLine();
 
+    /**
+     * Resolve the node id attached to a particular port
+     * @param port the port number
+     * @return the node id corresponding to that port number
+     */
+    virtual int portId(int port) const;
+
 private:
     int id_;
     std::vector<pollfd> port_fds_;
