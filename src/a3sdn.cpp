@@ -19,8 +19,8 @@ using namespace std;
 
 unique_ptr<NetworkNode> host;
 
-static const char* CONT_USAGE = "usage: a2sdn cont nSwitch portNumber";
-static const char* SWI_USAGE = "usage: a2sdn swi trafficFile [null|swj] [null|swk] IPlow-IPhigh serverAddress portNumber";
+static const char* CONT_USAGE = "usage: a3sdn cont nSwitch portNumber";
+static const char* SWI_USAGE = "usage: a3sdn swi trafficFile [null|swj] [null|swk] IPlow-IPhigh serverAddress portNumber";
 
 struct input_t {
     bool isCont;
